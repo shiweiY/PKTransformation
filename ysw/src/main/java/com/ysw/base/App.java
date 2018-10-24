@@ -7,7 +7,11 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Array;
+import java.security.KeyStore.Entry;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,7 +20,8 @@ import com.ysw.model.Typer;
 
 public class App 
 {
-	public static final List<String> DATATYPE = new ArrayList<String>();
+	public static final List<String> DATATYPE = new ArrayList<String>(Arrays.asList(" varchar",
+																		" number"," date"," integer"," smallint"));
 	
 	public static void main( String[] args ) throws Exception
 	{
@@ -27,43 +32,64 @@ public class App
 		String filePath = fileDir.toString()+"\\"+strFileList[0].toString();
 
 		String str = readFile(filePath);
-		getTyper(str);
+		Typer tp = getTyper(str);
 		System.out.println(str);
 	}
 
 	public static Typer getTyper(String str){
+		Map<Integer,String> map = new HashMap<Integer,String>();
+		Typer tp = new Typer();
 		if(!"".equals(str) && str != null){
-//			str = str.toLowerCase();//转换小写
-			str = str.toUpperCase();//转换大写
+			str = str.toLowerCase();//转换小写
+//			str = str.toUpperCase();//转换大写
 			
-			DATATYPE.add("VARCHAR");
-			DATATYPE.add("INTEGER");
-			DATATYPE.add("DATE");
-			DATATYPE.add("NUMBER");
-			
+			System.out.println(str);
+			System.err.println("----------------------------------");
 			
 			int nameLeft = str.indexOf("\"");//typeName的左边的 "
 			str = str.substring(nameLeft+1);
 			int nameRight =str.indexOf("\"");//typeName的右边的 "
 			
 			String typeName = str.substring(0, nameRight);
-			
-			Typer tp = new Typer();
 			tp.setTypeName(typeName);
 			
-			List<Integer> li = new ArrayList<Integer>();
-			Map<Object,Object> map = new HashMap<Object,Object>();
+//			List<Integer> li = new ArrayList<Integer>();
+			
+			int firIndex = 0;
 			for (String dataType : DATATYPE) {
-				int index = str.indexOf(dataType);
-//				String var = str.substring(varIndex);
+				while(true) {
+					Integer idx = str.indexOf(dataType,firIndex);
+//					System.out.println(idx);
+					if(idx != -1) {
+						map.put(idx, dataType.trim());
+					}else {
+						break;
+					}
+					firIndex = idx + 1;
+				}
+				firIndex = 0;
 			}
-				
+			
+			List<Integer> listIndex = new ArrayList<Integer>();
+			for(Map.Entry<Integer, String> entry : map.entrySet()) {
+				listIndex.add(entry.getKey());
+			}
+			Collections.sort(listIndex);
+			
+			List<String> attributeList = new ArrayList<String>();
+			for(Integer attributeIndex : listIndex) {
+				attributeList.add(map.get(attributeIndex));
+			}
+			
+			tp.setTypeAttribute(attributeList);
 			
 			
+		}else {
+			return null;
 		}
 		
 		
-		return null;
+		return tp;
 	}
 
 

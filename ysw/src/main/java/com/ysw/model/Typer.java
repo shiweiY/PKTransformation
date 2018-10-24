@@ -4,7 +4,7 @@ import java.util.List;
 
 public class Typer {
 	private String typeName;
-	private List typeAttribute;
+	private List<String> typeAttribute;
 	public String getTypeName() {
 		return typeName;
 	}
@@ -14,7 +14,7 @@ public class Typer {
 	public List getTypeAttribute() {
 		return typeAttribute;
 	}
-	public void setTypeAttribute(List typeAttribute) {
+	public void setTypeAttribute(List<String> typeAttribute) {
 		this.typeAttribute = typeAttribute;
 	}
 	
