@@ -11,23 +11,30 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.ysw.Util.DateUtil;
 import com.ysw.model.Typer;
 
-//
+
 public class App 
 {
 
 	public static final List<String> DATATYPE = new ArrayList<String>(Arrays.asList(" varchar",
 			" number"," date"," integer"," smallint"));
-
+	
 	public static void main( String[] args ) throws Exception
 	{
-		String filedir = "D:\\pk_temp\\type\\test";
-		File getFile = new File(filedir);
-		String[] strFileList = getFile.list();
+		
+		String fileDir = "D:\\pk_temp\\type";
+		File getFile = new File(fileDir);
+		
+		TypeFilter filter = new TypeFilter("rec_");
+		
+		
+		String[] strFileList = getFile.list(filter);//过滤选择的文件名列表
+		System.out.println("文件数量:"+strFileList.length);
 
 		for (int i = 0; i < strFileList.length ; i++) {
-			String filePath = filedir.toString()+"\\"+strFileList[i].toString();
+			String filePath = fileDir.toString()+"\\"+strFileList[i].toString();
 
 			String typeStr = readFile(filePath);
 			Typer tp = getTyper(typeStr);
@@ -38,19 +45,24 @@ public class App
 	}
 
 
-
+	/**
+	 * 输出文件
+	 * @param tp
+	 * @throws Exception
+	 */
 	public static void writer(Typer tp) throws Exception {
-		File file = new File("D:\\pk_temp\\type\\typeTFM\\Rec.txt");
-		if(file.exists()){
-			file.mkdir();
+		File file = new File("D:\\pk_temp\\typeTFM");
+		if(!file.exists()){
+			file.mkdirs();
 		}
-		OutputStream os = new FileOutputStream(file,true);
+		file = new File(file.getPath()+"\\Rec.txt");
+		
 		try {
 			if(tp != null){
 
-				String typeName = tp.getTypeName();
-				System.out.println(typeName);
-				List<String> attribute = tp.getTypeAttribute();
+				String typeName = tp.getTypeName();//type name
+				List<String> attribute = tp.getTypeAttribute();//type 属性
+				
 				StringBuffer typeStr = new StringBuffer(typeName+" := new "+typeName+"("); 
 				for (int i = 0 ; i < attribute.size(); i++) {
 					String attr = attribute.get(i);
@@ -66,7 +78,7 @@ public class App
 							typeStr.append(i+",");
 							break;
 						case "date":
-							typeStr.append("date'2018-10-24',");
+							typeStr.append("date'"+DateUtil.getIncreaseDate()+"',");
 							break;
 						case "smallint":
 							typeStr.append(i+",");
@@ -80,17 +92,18 @@ public class App
 				String str = typeStr.substring(0, typeStr.length()-1).concat(");");
 
 				byte[] b = str.getBytes();
-
+				
+				OutputStream os = new FileOutputStream(file,true);
 				os.write(b);
 				os.write("\r\n".getBytes());
 				os.write("\r\n".getBytes());
+				
+				os.close();
 				
 
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-		}finally{
-			os.close();
 		}
 
 	}
@@ -124,19 +137,18 @@ public class App
 
 			//			List<Integer> li = new ArrayList<Integer>();
 
-			int firIndex = 0;
+			int friIndex = 0;
 			for (String dataType : DATATYPE) {
 				while(true) {
-					Integer idx = typeStr.indexOf(dataType,firIndex);
-					//					System.out.println(idx);
+					Integer idx = typeStr.indexOf(dataType,friIndex);
 					if(idx != -1) {
 						map.put(idx, dataType.trim());
 					}else {
 						break;
 					}
-					firIndex = idx + 1;
+					friIndex = idx + 1;
 				}
-				firIndex = 0;
+				friIndex = 0;
 			}
 
 			List<Integer> listIndex = new ArrayList<Integer>();
@@ -151,7 +163,7 @@ public class App
 			}
 
 			tp.setTypeAttribute(attributeList);
-
+			System.out.println(tp.getTypeName()+" 属性数量:"+tp.getTypeAttribute().size());
 
 		}else {
 			return null;
@@ -182,6 +194,8 @@ public class App
 					sb.append((char)content);
 					content = fs.read();
 				}
+				
+				fs.close();
 
 			}
 		} catch (Exception e) {
