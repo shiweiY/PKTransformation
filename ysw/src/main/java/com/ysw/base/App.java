@@ -33,6 +33,7 @@ public class App
 		String[] strFileList = getFile.list(filter);//过滤选择的文件名列表
 		System.out.println("文件数量:"+strFileList.length);
 
+		long startTime=System.currentTimeMillis();//开始工作时间
 		for (int i = 0; i < strFileList.length ; i++) {
 			String filePath = fileDir.toString()+"\\"+strFileList[i].toString();
 
@@ -41,7 +42,8 @@ public class App
 
 			writer(tp);
 		}
-		
+		long endTime=System.currentTimeMillis(); 
+		System.out.println(strFileList.length+"个文件运行了: "+(endTime-startTime)/1000+"s");
 	}
 
 
