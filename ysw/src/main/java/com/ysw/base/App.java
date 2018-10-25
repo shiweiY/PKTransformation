@@ -20,30 +20,78 @@ public class App
 
 	public static final List<String> DATATYPE = new ArrayList<String>(Arrays.asList(" varchar",
 			" number"," date"," integer"," smallint"));
-	
+
 	public static void main( String[] args ) throws Exception
 	{
-		
+
 		String fileDir = "D:\\pk_temp\\type";
 		File getFile = new File(fileDir);
-		
-		TypeFilter filter = new TypeFilter("rec_");
-		
-		
-		String[] strFileList = getFile.list(filter);//过滤选择的文件名列表
-		System.out.println("文件数量:"+strFileList.length);
+
+		TypeFilter filterRec = new TypeFilter("rec_");//rec_文件过滤规则
+		TypeFilter filterNt = new TypeFilter("nt_rec_");//nt文件过滤规则
+
+		String[] recList = getFile.list(filterRec);//过滤选择的rec文件名列表
+		String[] ntList = getFile.list(filterNt);//过滤选择的nt文件名列表
+		System.out.println("rec文件数量:"+recList.length);
+		System.out.println("nt文件数量:"+recList.length);
 
 		long startTime=System.currentTimeMillis();//开始工作时间
-		for (int i = 0; i < strFileList.length ; i++) {
-			String filePath = fileDir.toString()+"\\"+strFileList[i].toString();
 
-			String typeStr = readFile(filePath);
-			Typer tp = getTyper(typeStr);
+		//		recStart(fileDir,recList);
 
-			writer(tp);
-		}
+				ntStart("1","2");
+
 		long endTime=System.currentTimeMillis(); 
-		System.out.println(strFileList.length+"个文件运行了: "+(endTime-startTime)/1000+"s");
+		System.out.println(recList.length+"个文件运行了: "+(endTime-startTime)/1000+"s");
+	}
+
+	/**
+	 * type 开始遍历转换
+	 * @param fileDir
+	 * @param recList
+	 * @throws Exception
+	 */
+	public static void recStart(String fileDir,String[] recList) throws Exception {
+
+		if(fileDir.isEmpty() && recList.toString().isEmpty()) {
+			for (int i = 0; i < recList.length ; i++) {
+
+				String filePath = fileDir.toString()+"\\"+recList[i].toString();
+
+				String typeStr = readFile(filePath);//获取type 文本
+				Typer tp = getTyper(typeStr);//文本转换为model
+
+				writerFile(tp);//输出转换
+			}
+		}
+
+	}
+
+	/***
+	 * nt生成   提供给生成PROCEDURE或者FUNCTION时调用,以获取nt假数据
+	 * @param returnStyle &nbsp; nt在存储过程的返回方式，return返回或者out出参返回
+	 * @param ntName &nbsp; nt 的名字
+	 * @throws Exception
+	 * @return String
+	 */
+	public static String ntStart(String returnStyle,String ntName) throws Exception {
+		if(!ntName.isEmpty()) {
+			StringBuffer ntTypeStr = new StringBuffer();
+			String recTypeDBPath = "D:\\pk_temp\\typeTFM\\Rec.txt";//转换后type假数据的储存位置
+			String recTypeDBStr = readFile(recTypeDBPath);//读取为字符串
+
+			String recName = ntName.substring(ntName.indexOf("rec_"),ntName.length());//获取子type的名字
+
+			int recIndex = recTypeDBStr.indexOf(recName);//rec type的位置
+			if(recIndex >= 0) {
+				int newIndex = recTypeDBStr.indexOf("new",recIndex);//new 关键字的位置
+				int endSymbol = recTypeDBStr.indexOf(";", newIndex);//结束的;的位置
+				String recTF = recTypeDBStr.substring(newIndex, endSymbol+1);
+				System.out.println(recTF);
+
+			}
+		}
+		return "";
 	}
 
 
@@ -52,19 +100,20 @@ public class App
 	 * @param tp
 	 * @throws Exception
 	 */
-	public static void writer(Typer tp) throws Exception {
+	public static String writerFile(Typer tp) throws Exception {
 		File file = new File("D:\\pk_temp\\typeTFM");
+		String str = "";
 		if(!file.exists()){
 			file.mkdirs();
 		}
 		file = new File(file.getPath()+"\\Rec.txt");
-		
+
 		try {
 			if(tp != null){
 
 				String typeName = tp.getTypeName();//type name
 				List<String> attribute = tp.getTypeAttribute();//type 属性
-				
+
 				StringBuffer typeStr = new StringBuffer(typeName+" := new "+typeName+"("); 
 				for (int i = 0 ; i < attribute.size(); i++) {
 					String attr = attribute.get(i);
@@ -91,22 +140,23 @@ public class App
 					}
 
 				}
-				String str = typeStr.substring(0, typeStr.length()-1).concat(");");
+				str = typeStr.substring(0, typeStr.length()-1).concat(");");
 
 				byte[] b = str.getBytes();
-				
+
 				OutputStream os = new FileOutputStream(file,true);
 				os.write(b);
 				os.write("\r\n".getBytes());
 				os.write("\r\n".getBytes());
-				
+
 				os.close();
-				
+
 
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		return str;
 
 	}
 
@@ -124,11 +174,7 @@ public class App
 		Map<Integer,String> map = new HashMap<Integer,String>();
 		Typer tp = new Typer();
 		if(!"".equals(typeStr) && typeStr != null){
-			typeStr = typeStr.toLowerCase();//转换小写
-			//			typeStr = typeStr.toUpperCase();//转换大写
-
-//			System.out.println(typeStr);
-//			System.err.println("----------------------------------");
+			typeStr = typeStr.toLowerCase();//文本转换小写
 
 			int nameLeft = typeStr.indexOf("\"");//typeName的左边的 "
 			typeStr = typeStr.substring(nameLeft+1);
@@ -136,8 +182,6 @@ public class App
 
 			String typeName = typeStr.substring(0, nameRight);
 			tp.setTypeName(typeName);
-
-			//			List<Integer> li = new ArrayList<Integer>();
 
 			int friIndex = 0;
 			for (String dataType : DATATYPE) {
@@ -196,7 +240,7 @@ public class App
 					sb.append((char)content);
 					content = fs.read();
 				}
-				
+
 				fs.close();
 
 			}

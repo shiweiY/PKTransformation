@@ -11,7 +11,7 @@ public class Typer {
 	public void setTypeName(String typeName) {
 		this.typeName = typeName;
 	}
-	public List getTypeAttribute() {
+	public List<String> getTypeAttribute() {
 		return typeAttribute;
 	}
 	public void setTypeAttribute(List<String> typeAttribute) {
