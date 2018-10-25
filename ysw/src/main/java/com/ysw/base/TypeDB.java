@@ -12,10 +12,17 @@ import java.util.List;
 import java.util.Map;
 
 import com.ysw.Util.DateUtil;
+import com.ysw.Util.TypeFilter;
 import com.ysw.model.Typer;
 
-
-public class App 
+/***
+ * 
+ * @author ysw
+ *
+ *	对oracle type进行参数读取 生成假数据并输出
+ *
+ */
+public class TypeDB 
 {
 
 	public static final List<String> DATATYPE = new ArrayList<String>(Arrays.asList(" varchar",
@@ -24,36 +31,39 @@ public class App
 	public static void main( String[] args ) throws Exception
 	{
 
-		String fileDir = "D:\\pk_temp\\type";
+		String fileDir = "D:\\pck\\type";
 		File getFile = new File(fileDir);
+		if(getFile.exists()){
+			getFile.mkdirs();
+		}
 
 		TypeFilter filterRec = new TypeFilter("rec_");//rec_文件过滤规则
-		TypeFilter filterNt = new TypeFilter("nt_rec_");//nt文件过滤规则
+//		TypeFilter filterNt = new TypeFilter("nt_rec_");//nt文件过滤规则
 
 		String[] recList = getFile.list(filterRec);//过滤选择的rec文件名列表
-		String[] ntList = getFile.list(filterNt);//过滤选择的nt文件名列表
+//		String[] ntList = getFile.list(filterNt);//过滤选择的nt文件名列表
 		System.out.println("rec文件数量:"+recList.length);
 		System.out.println("nt文件数量:"+recList.length);
 
 		long startTime=System.currentTimeMillis();//开始工作时间
 
-		//		recStart(fileDir,recList);
+		recStart(fileDir,recList);
 
-				ntStart("1","2");
+//		ntStart("1","2");
 
 		long endTime=System.currentTimeMillis(); 
 		System.out.println(recList.length+"个文件运行了: "+(endTime-startTime)/1000+"s");
 	}
 
 	/**
-	 * type 开始遍历转换
+	 * type 遍历转换
 	 * @param fileDir
 	 * @param recList
 	 * @throws Exception
 	 */
 	public static void recStart(String fileDir,String[] recList) throws Exception {
 
-		if(fileDir.isEmpty() && recList.toString().isEmpty()) {
+		if(!fileDir.isEmpty() && !recList.toString().isEmpty()) {
 			for (int i = 0; i < recList.length ; i++) {
 
 				String filePath = fileDir.toString()+"\\"+recList[i].toString();
@@ -77,7 +87,7 @@ public class App
 	public static String ntStart(String returnStyle,String ntName) throws Exception {
 		if(!ntName.isEmpty()) {
 			StringBuffer ntTypeStr = new StringBuffer();
-			String recTypeDBPath = "D:\\pk_temp\\typeTFM\\Rec.txt";//转换后type假数据的储存位置
+			String recTypeDBPath = "D:\\pk_temp\\typeTFM\\typeDB.txt";//转换后type假数据的储存位置
 			String recTypeDBStr = readFile(recTypeDBPath);//读取为字符串
 
 			String recName = ntName.substring(ntName.indexOf("rec_"),ntName.length());//获取子type的名字
@@ -101,12 +111,12 @@ public class App
 	 * @throws Exception
 	 */
 	public static String writerFile(Typer tp) throws Exception {
-		File file = new File("D:\\pk_temp\\typeTFM");
+		File file = new File("D:\\pck\\TypeDB");
 		String str = "";
 		if(!file.exists()){
 			file.mkdirs();
 		}
-		file = new File(file.getPath()+"\\Rec.txt");
+		file = new File(file.getPath()+"\\typeDB.txt");
 
 		try {
 			if(tp != null){
@@ -174,7 +184,6 @@ public class App
 		Map<Integer,String> map = new HashMap<Integer,String>();
 		Typer tp = new Typer();
 		if(!"".equals(typeStr) && typeStr != null){
-			typeStr = typeStr.toLowerCase();//文本转换小写
 
 			int nameLeft = typeStr.indexOf("\"");//typeName的左边的 "
 			typeStr = typeStr.substring(nameLeft+1);
@@ -247,7 +256,6 @@ public class App
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-
-		return sb.toString();
+		return sb.toString().toLowerCase();//返回时转小写
 	}
 }

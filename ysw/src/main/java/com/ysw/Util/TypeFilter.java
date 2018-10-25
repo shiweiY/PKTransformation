@@ -1,25 +1,28 @@
-package com.ysw.base;
+package com.ysw.Util;
 
 import java.io.File;
 import java.io.FilenameFilter;
 
 public class TypeFilter implements FilenameFilter {
-	private String typeStartName;
+	private String typePattern;
 	
 	public String getTypeStartName() {
-		return typeStartName;
+		return typePattern;
 	}
 	public void setTypeStartName(String typeStartName) {
-		this.typeStartName = typeStartName;
+		this.typePattern = typeStartName;
 	}
 
 	public TypeFilter(String typeStartName) {
-		this.typeStartName = typeStartName;
+		this.typePattern = typeStartName;
 	}
 
 	//过滤条件
 	public boolean accept(File dir, String name) {
-		return name.startsWith(typeStartName);
+		if(name.startsWith(typePattern)){
+			return name.startsWith(typePattern);
+		}
+		return name.endsWith(typePattern);
 	}
 
 }
