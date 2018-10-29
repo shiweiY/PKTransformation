@@ -5,37 +5,54 @@ import java.io.File;
 import com.ysw.Util.TypeFilter;
 
 public class StoredProcedureStart {
+	
+	public static final String PKDIRPATH = "D:\\pck\\test";
+	public static final String[] PEDURE = {"PROCEDURE","FUNCTION"};
+	
 	public static void main(String[] args) {
-		String pkDirPath = "D:\\pk_temp\\temp";
 		
-		File file = new File(pkDirPath);
+		File file = new File(PKDIRPATH);
 		if(file.exists()){
 			file.mkdirs();
 		}
 		
 		TypeFilter tf = new TypeFilter(".bdy");//bdy 存储过程body文件,源文件内包含逻辑
 		
-		String[] pk_file = file.list(tf);
-		System.out.println("pk数量: "+pk_file.length);
-		
-		for (int i = 0; i < pk_file.length; i++) {
-			String pkPath = pkDirPath+"\\"+pk_file[i];
-			
-			String pkStr = TypeDB.readFile(pkPath);
-			System.out.println(pkStr);
-			pck(pkStr);
-		}
+		String[] pk_array = file.list(tf);
+		System.out.println("pk数量: "+pk_array.length);
+		pck(pk_array);
 		
 	}
 	
 	
-	public static void pck(String pkStr){
-		if(!pkStr.isEmpty()){
-			int cIndex = pkStr.indexOf("create");
-			int isIndex = pkStr.indexOf("is")+2;
-			
-			String pkHead = pkStr.substring(cIndex, isIndex).toUpperCase();//存储过程头转大写
-			System.out.println(pkHead);
+	public static void pck(String[] pk_array){
+		if(pk_array.length > 0){
+			for (int i = 0; i < pk_array.length; i++) {
+				String pkPath = PKDIRPATH+"\\"+pk_array[i];
+				
+				String pkStr = TypeDB.getFileStr(pkPath);
+				
+				while(true){
+					int beginIndex = pkStr.indexOf(PEDURE[i]);
+					if(beginIndex != -1){
+						
+						int isIndex = pkStr.indexOf("IS", beginIndex);
+						
+						if(isIndex != -1){
+							String temporary = pkStr.substring(beginIndex, isIndex);
+							
+							System.out.println(temporary);
+							
+							pkStr = pkStr.substring(isIndex+1);
+							
+							System.out.println(pkStr);
+						}
+						
+					}else{
+						break;
+					}
+				}
+			}
 		}
 	}
 	

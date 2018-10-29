@@ -20,6 +20,7 @@ import com.ysw.model.Typer;
  * @author ysw
  *
  *	对oracle type进行参数读取 生成假数据并输出
+ *  
  *
  */
 public class TypeDB 
@@ -38,18 +39,18 @@ public class TypeDB
 		}
 
 		TypeFilter filterRec = new TypeFilter("rec_");//rec_文件过滤规则
-//		TypeFilter filterNt = new TypeFilter("nt_rec_");//nt文件过滤规则
+		TypeFilter filterNt = new TypeFilter("nt_rec_");//nt文件过滤规则
 
 		String[] recList = getFile.list(filterRec);//过滤选择的rec文件名列表
-//		String[] ntList = getFile.list(filterNt);//过滤选择的nt文件名列表
+		String[] ntList = getFile.list(filterNt);//过滤选择的nt文件名列表
 		System.out.println("rec文件数量:"+recList.length);
-		System.out.println("nt文件数量:"+recList.length);
+		System.out.println("nt文件数量:"+ntList.length);
 
 		long startTime=System.currentTimeMillis();//开始工作时间
 
 		recStart(fileDir,recList);
 
-//		ntStart("1","2");
+//		ntStart(ntList);
 
 		long endTime=System.currentTimeMillis(); 
 		System.out.println(recList.length+"个文件运行了: "+(endTime-startTime)/1000+"s");
@@ -63,12 +64,12 @@ public class TypeDB
 	 */
 	public static void recStart(String fileDir,String[] recList) throws Exception {
 
-		if(!fileDir.isEmpty() && !recList.toString().isEmpty()) {
+		if(!fileDir.isEmpty() && recList.length > 0) {
 			for (int i = 0; i < recList.length ; i++) {
 
 				String filePath = fileDir.toString()+"\\"+recList[i].toString();
 
-				String typeStr = readFile(filePath);//获取type 文本
+				String typeStr = getLowerCaseFileStr(filePath);//获取type 小写文本
 				Typer tp = getTyper(typeStr);//文本转换为model
 
 				writerFile(tp);//输出转换
@@ -84,25 +85,25 @@ public class TypeDB
 	 * @throws Exception
 	 * @return String
 	 */
-	public static String ntStart(String returnStyle,String ntName) throws Exception {
-		if(!ntName.isEmpty()) {
-			StringBuffer ntTypeStr = new StringBuffer();
-			String recTypeDBPath = "D:\\pk_temp\\typeTFM\\typeDB.txt";//转换后type假数据的储存位置
-			String recTypeDBStr = readFile(recTypeDBPath);//读取为字符串
-
-			String recName = ntName.substring(ntName.indexOf("rec_"),ntName.length());//获取子type的名字
-
-			int recIndex = recTypeDBStr.indexOf(recName);//rec type的位置
-			if(recIndex >= 0) {
-				int newIndex = recTypeDBStr.indexOf("new",recIndex);//new 关键字的位置
-				int endSymbol = recTypeDBStr.indexOf(";", newIndex);//结束的;的位置
-				String recTF = recTypeDBStr.substring(newIndex, endSymbol+1);
-				System.out.println(recTF);
-
-			}
-		}
-		return "";
-	}
+//	public static String ntStart(String[] ntList) throws Exception {
+//		if(ntList != null && ntList.length > 0) {
+//			StringBuffer ntTypeStr = new StringBuffer();
+//			String recTypeDBPath = "D:\\pck\\typeTFM\\typeDB.txt";//转换后type假数据的储存位置
+//			String recTypeDBStr = getLowerCaseFileStr(recTypeDBPath);//读取为字符串
+//
+//			String recName = ntName.substring(ntName.indexOf("rec_"),ntName.length());//获取子type的名字
+//
+//			int recIndex = recTypeDBStr.indexOf(recName);//rec type的位置
+//			if(recIndex >= 0) {
+//				int newIndex = recTypeDBStr.indexOf("new",recIndex);//new 关键字的位置
+//				int endSymbol = recTypeDBStr.indexOf(";", newIndex);//结束的;的位置
+//				String recTF = recTypeDBStr.substring(newIndex, endSymbol+1);
+//				System.out.println(recTF);
+//
+//			}
+//		}
+//		return "";
+//	}
 
 
 	/**
@@ -124,7 +125,7 @@ public class TypeDB
 				String typeName = tp.getTypeName();//type name
 				List<String> attribute = tp.getTypeAttribute();//type 属性
 
-				StringBuffer typeStr = new StringBuffer(typeName+" := new "+typeName+"("); 
+				StringBuffer typeStr = new StringBuffer("g_"+typeName+" := new "+typeName+"("); 
 				for (int i = 0 ; i < attribute.size(); i++) {
 					String attr = attribute.get(i);
 					if(attr != null && !attr.isEmpty()){
@@ -227,15 +228,44 @@ public class TypeDB
 
 		return tp;
 	}
+	
+	/**
+	 * 获取纯小写文本
+	 * @param filePath
+	 * @return
+	 */
+	public static String getLowerCaseFileStr(String filePath){
+		return readFile(filePath,0);
+	}
+	
+	/**
+	 * 获取纯大写文本
+	 * @param filePath
+	 * @return
+	 */
+	public static String getUpperCaseFileStr(String filePath){
+		return readFile(filePath,-1);
+	}
+	
+	/**
+	 * 获取纯源文件文本
+	 * @param filePath
+	 * @return
+	 */
+	public static String getFileStr(String filePath){
+		return readFile(filePath,1);
+	}
+	
+	
 
 
 	/***
-	 * 读取type 以String形式返回
+	 * 读取type 以String形式返回,参数i为0返回小写,-1为大写,否则为原文件
 	 * 
-	 * @param filePath
+	 * @param filePath i
 	 * @return String
 	 */
-	public static String readFile(String filePath){
+	public static String readFile(String filePath,int i){
 		StringBuffer sb = new StringBuffer();
 		try {
 			if(!"".equals(filePath) && filePath != null){
@@ -256,6 +286,14 @@ public class TypeDB
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return sb.toString().toLowerCase();//返回时转小写
+		
+		if(i == 0){
+			return sb.toString().toLowerCase();//返回时转小写
+		}else if(i == -1){
+			return sb.toString().toUpperCase();//返回时转大写写
+		}else{
+			return sb.toString();//返回源文件字符
+		}
+		
 	}
 }
