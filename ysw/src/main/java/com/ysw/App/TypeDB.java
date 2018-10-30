@@ -1,10 +1,7 @@
 package com.ysw.App;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -14,11 +11,9 @@ import java.util.List;
 import java.util.Map;
 
 import com.ysw.FileFactory.FileFactory;
-import com.ysw.Util.DateUtil;
 import com.ysw.Util.TypeFilter;
 import com.ysw.model.Typer;
 
-import net.sf.json.JSONObject;
 
 /***
  * 
@@ -30,7 +25,7 @@ import net.sf.json.JSONObject;
  */
 public class TypeDB 
 {
-	public static final String READFILEDIR = "D:\\pck\\type";
+	public static final String READFILEDIR = "D:\\pck\\test";
 	public static final String OUTFILEDIR = "D:\\pck\\TypeDB";
 	public static File FILEPATH = new File(OUTFILEDIR);
 	public static final List<String> DATATYPE = new ArrayList<String>(Arrays.asList(" varchar",
@@ -52,22 +47,24 @@ public class TypeDB
 		//过滤关键字
 		String type_head_1 = "rec_";
 		String type_head_2 = "ob_";
+		String type_head_3 = "nt_";
 
 		TypeFilter filterRec = new TypeFilter(type_head_1);//rec_文件过滤规则
 		TypeFilter filterOb = new TypeFilter(type_head_2);//ob_文件过滤规则
+		TypeFilter filterNt = new TypeFilter(type_head_3);//ob_文件过滤规则
 
 		String[] list_1 = FILEPATH.list(filterRec);
 		String[] list_2 = FILEPATH.list(filterOb);
+		String[] list_3 = FILEPATH.list(filterNt);
 
 		Map<String,String[]> mapList = new HashMap<String,String[]>();
-		mapList.put(type_head_1, list_1);
-		mapList.put(type_head_2, list_2);
+		//		mapList.put(type_head_1, list_1);
+		//		mapList.put(type_head_2, list_2);
+		mapList.put(type_head_3, list_3);
 
 		long startTime=System.currentTimeMillis();//开始工作时间
 
 		typeStart(mapList);
-
-
 
 		long endTime=System.currentTimeMillis(); 
 		System.out.println("type_DB生成时间: "+(endTime-startTime)/1000+"s");
@@ -84,28 +81,32 @@ public class TypeDB
 
 		if(mapList != null) {
 			for(Map.Entry<String,String[]> entry : mapList.entrySet()) {
-				File file = new File(OUTFILEDIR+"\\"+entry.getKey().toUpperCase()+"DB.json");
+				if(entry.getKey() != "nt"){
 
-				OutputStream os = new FileOutputStream(file,true);
-				byte[] left = "{".getBytes();//json文件的左右括弧
-				byte[] right = "}".getBytes();
 
-				os.write(left);
-				os.write("\r\n".getBytes());
+					File file = new File(OUTFILEDIR+"\\"+entry.getKey().toUpperCase()+"DB.json");
 
-				for (String type : entry.getValue()) {
+					OutputStream os = new FileOutputStream(file,true);
+					byte[] left = "{".getBytes();//json文件的左右括弧
+					byte[] right = "}".getBytes();
 
-					String filePath = READFILEDIR+"\\"+type;
+					os.write(left);
+					os.write("\r\n".getBytes());
 
-					String typeStr = FileFactory.getFileStrLowerCase(filePath);//获取type 小写文本
-					Typer tp = getTyper(typeStr);//文本转换为model
+					for (String type : entry.getValue()) {
 
-					//FileFactory.writerFile(tp);//输出为文本
-					FileFactory.writeJson(tp,file);//输出为json
+						String filePath = READFILEDIR+"\\"+type;
+
+						String typeStr = FileFactory.getFileStrLowerCase(filePath);//获取type 小写文本
+						Typer tp = getTyper(typeStr);//文本转换为model
+
+						//FileFactory.writerFile(tp);//输出为文本
+						FileFactory.writeJson(tp,file);//输出为json
+					}
+					os.write(right);
+					os.close();
+
 				}
-				os.write(right);
-				os.close();
-
 			}
 		}
 	}
